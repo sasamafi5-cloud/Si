@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e8edf3">
+<title>Ana – AI Sekretarica</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#e8edf3;--tx:#2a3a4a;--tx2:#2a3a4a55;--ac:#00c8b4;--dark:#b8c5d0;--light:#ffffff;--r:16px}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden}
+.c{background:var(--bg);box-shadow:6px 6px 14px var(--dark),-6px -6px 14px var(--light);border-radius:var(--r)}
+.i{background:var(--bg);box-shadow:inset 4px 4px 10px var(--dark),inset -4px -4px 10px var(--light);border-radius:12px}
+.b{background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light);border-radius:50px;border:none;cursor:pointer;color:var(--tx);font-family:inherit;transition:all .2s;outline:none}
+.b:active{box-shadow:inset 3px 3px 8px var(--dark),inset -3px -3px 8px var(--light)}
+input,textarea,select{background:var(--bg);box-shadow:inset 4px 4px 10px var(--dark),inset -4px -4px 10px var(--light);border-radius:12px;border:none;color:var(--tx);font-family:inherit;outline:none;width:100%;padding:10px 14px;font-size:13px}
+#app{max-width:480px;margin:0 auto;padding:0 0 20px}
+.hdr{padding:14px 14px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.clk{font-size:28px;font-weight:900;letter-spacing:-1px}
+.dbar{padding:4px 14px 8px;font-size:12px;font-weight:700;color:var(--ac)}
+.tabs{display:inline-flex;gap:2px;padding:5px 6px}
+.tb{padding:7px 11px;font-size:12px;font-weight:700;border-radius:50px;border:none;cursor:pointer;font-family:inherit;background:transparent;box-shadow:none;color:var(--tx2);transition:all .2s}
+.tb.on{background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light);color:var(--ac)}
+.ana-card{margin:10px 12px;padding:14px;display:flex;align-items:center;gap:12px}
+.ana-av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--ac),#00a896);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 4px 14px #00c8b444}
+.ana-av.talking{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes si{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dot{0%,100%{height:4px}50%{height:16px}}
+@keyframes pr{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.8);opacity:0}}
+.chat-box{margin:0 12px 10px;padding:12px;min-height:220px;max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.msg-row{display:flex;animation:si .2s ease}
+.msg-row.u{justify-content:flex-end}
+.msg-row.a{justify-content:flex-start;align-items:flex-end;gap:6px}
+.av-sm{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--ac),#00a896);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.bubble{max-width:78%;padding:9px 13px;border-radius:18px;font-size:13px;line-height:1.5;word-break:break-word}
+.bubble.u{background:linear-gradient(135deg,var(--ac),#00a896);color:#fff;border-radius:18px 18px 4px 18px;box-shadow:0 4px 12px #00c8b444}
+.bubble.a{background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light);border-radius:18px 18px 18px 4px}
+.dots-wrap{display:flex;gap:5px;padding:10px 14px;align-items:center}
+.dot-ani{width:7px;height:7px;border-radius:50%;background:var(--ac);animation:dot .7s ease infinite alternate}
+.dot-ani:nth-child(2){animation-delay:.2s}.dot-ani:nth-child(3){animation-delay:.4s}
+.inp-bar{margin:0 12px 10px;padding:9px;display:flex;gap:8px;align-items:center}
+.mic-wrap{position:relative;flex-shrink:0}
+.mic-ring{position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--ac);animation:pr 1s ease-out infinite;display:none}
+.mic-btn{width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light)}
+.mic-btn.on{background:linear-gradient(135deg,var(--ac),#00a896)!important;box-shadow:0 0 20px #00c8b488!important}
+.send-btn{width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light);flex-shrink:0}
+.ex-wrap{display:flex;gap:6px;flex-wrap:wrap;margin:0 12px 12px}
+.ex-btn{padding:7px 11px;font-size:10px;font-weight:700;color:var(--ac)}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 12px 10px}
+.q-sec{padding:12px 11px}
+.q-title{font-size:11px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.q-item{padding:7px 9px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.sec{margin:0 12px 10px;padding:14px}
+.sec-title{font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ac);display:flex;align-items:center;gap:6px}
+.tgl{width:42px;height:24px;border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;transition:background .3s}
+.tgl-k{position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.tline{padding:6px 9px;margin-bottom:4px;border-radius:0 10px 10px 0;border-left:3px solid var(--ac)}
+#offbadge{position:fixed;top:6px;right:8px;background:#ff6644;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;z-index:999;display:none}
+
+/* KEY SETUP */
+.key-box{margin:10px 12px;padding:16px}
+.key-title{font-size:15px;font-weight:900;margin-bottom:6px;color:var(--ac)}
+.key-desc{font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.6}
+.key-link{color:var(--ac);font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+<div id="offbadge">OFFLINE</div>
+<div id="app">
+
+  <div class="hdr">
+    <div>
+      <div class="c tabs" id="tabbar">
+        <button class="tb on" data-t="chat">Ana</button>
+        <button class="tb" data-t="notes">Beleske</button>
+        <button class="tb" data-t="alarmi">Alarmi</button>
+        <button class="tb" data-t="termini">Termini</button>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="clk" id="clk">00:00</div>
+      <div style="font-size:11px;color:var(--tx2);font-weight:600">Sasa</div>
+    </div>
+  </div>
+  <div class="dbar" id="dbar"></div>
+
+  <!-- CHAT TAB -->
+  <div id="t-chat">
+
+    <!-- ANA PROFIL -->
+    <div class="c ana-card">
+      <div class="ana-av" id="ana-av">&#x1F469;&#x200D;&#x1F4BC;</div>
+      <div style="flex:1">
+        <div style="font-size:17px;font-weight:900">Ana</div>
+        <div style="font-size:11px;color:var(--ac);font-weight:700" id="ana-status">&#x25CF; Dostupna</div>
+        <div style="font-size:10px;color:var(--tx2);margin-top:2px">AI Sekretarica &bull; Gemini Free</div>
+      </div>
+      <button class="b" onclick="toggleSettings()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+
+    <!-- SETTINGS / KEY SETUP -->
+    <div id="settings-box" style="display:none">
+      <div class="c key-box">
+        <div class="key-title">&#x1F511; Gemini API Kljuc (BESPLATNO)</div>
+        <div class="key-desc">
+          1. Idi na <a href="https://aistudio.google.com/app/apikey" target="_blank" class="key-link">aistudio.google.com/app/apikey</a><br>
+          2. Prijavi se Google nalogom<br>
+          3. Klikni "Create API Key"<br>
+          4. Kopiraj i unesi kljuc ispod<br>
+          <span style="color:var(--ac);font-weight:700">&#x2705; Gemini 2.0 Flash je BESPLATAN!</span>
+        </div>
+        <input type="password" id="gem-key" placeholder="AIza..." style="margin-bottom:8px;font-family:monospace;font-size:12px">
+        <button class="b" onclick="saveGemKey()" style="width:100%;padding:10px;font-size:13px;font-weight:700;color:var(--ac)">Sacuvaj Kljuc</button>
+        <div id="key-status" style="font-size:11px;text-align:center;margin-top:6px;color:var(--tx2)"></div>
+
+        <div style="margin-top:14px;font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ac)">Tema</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="b" onclick="setTheme('light')" style="flex:1;padding:9px;font-size:11px;font-weight:700">Svetla</button>
+          <button class="b" onclick="setTheme('dark')" style="flex:1;padding:9px;font-size:11px;font-weight:700">Tamna</button>
+          <button class="b" onclick="setTheme('blue')" style="flex:1;padding:9px;font-size:11px;font-weight:700">Plava</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div onclick="setAC('#00c8b4')" style="width:28px;height:28px;border-radius:50%;background:#00c8b4;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#6ab4ff')" style="width:28px;height:28px;border-radius:50%;background:#6ab4ff;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#ffb347')" style="width:28px;height:28px;border-radius:50%;background:#ffb347;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#ff7eb3')" style="width:28px;height:28px;border-radius:50%;background:#ff7eb3;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#b47eff')" style="width:28px;height:28px;border-radius:50%;background:#b47eff;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRZI PREGLED -->
+    <div class="qgrid">
+      <div class="c q-sec">
+        <div class="q-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Alarmi
+        </div>
+        <div id="qalarms"></div>
+      </div>
+      <div class="c q-sec">
+        <div class="q-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Termini
+        </div>
+        <div id="qevents"></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="c chat-box" id="chat-box"></div>
+
+    <!-- INPUT -->
+    <div class="c inp-bar">
+      <div class="mic-wrap">
+        <div class="mic-ring" id="mic-ring"></div>
+        <button class="mic-btn" id="mic-btn" onclick="togMic()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2" stroke-linecap="round" id="mic-ico"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+      </div>
+      <input id="chat-inp" placeholder="Pitaj Anu nesto..." onkeydown="if(event.key==='Enter'){var v=this.value;this.value='';sendMsg(v)}" style="font-size:13px">
+      <button class="send-btn" onclick="var v=document.getElementById('chat-inp').value;document.getElementById('chat-inp').value='';sendMsg(v)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+
+    <!-- PRIMERI -->
+    <div class="ex-wrap">
+      <button class="b ex-btn" onclick="sendMsg('Sta imam danas?')">Sta imam danas?</button>
+      <button class="b ex-btn" onclick="sendMsg('Dodaj alarm za 8:00')">Alarm 8:00</button>
+      <button class="b ex-btn" onclick="sendMsg('Moji zadaci')">Zadaci</button>
+      <button class="b ex-btn" onclick="sendMsg('Koji su moji termini?')">Termini</button>
+    </div>
+  </div>
+
+  <!-- BELESKE -->
+  <div id="t-notes" style="display:none">
+    <div class="c sec">
+      <div class="sec-title">Nova Beleska</div>
+      <input id="nt" placeholder="Naziv beleske..." style="margin-bottom:8px">
+      <textarea id="ni" placeholder="Stavke (svaka u novom redu)..." rows="3" style="padding:10px 14px;font-size:12px;resize:none;margin-bottom:8px;display:block"></textarea>
+      <button class="b" onclick="addNote()" style="width:100%;padding:11px;font-size:13px;font-weight:700;color:var(--ac)">Sacuvaj</button>
+    </div>
+    <div id="notes-list"></div>
+  </div>
+
+  <!-- ALARMI -->
+  <div id="t-alarmi" style="display:none">
+    <div class="c sec">
+      <div class="sec-title">Novi Alarm</div>
+      <input id="al" placeholder="Naziv alarma..." style="margin-bottom:8px">
+      <input type="time" id="at" style="margin-bottom:8px">
+      <select id="arep" style="margin-bottom:10px;font-size:12px">
+        <option value="none">Jednom</option>
+        <option value="daily">Svaki dan</option>
+        <option value="weekdays">Radni dani</option>
+        <option value="weekend">Vikend</option>
+      </select>
+      <button class="b" onclick="addAlarm()" style="width:100%;padding:11px;font-size:13px;font-weight:700;color:var(--ac)">Postavi Alarm</button>
+    </div>
+    <div id="alarms-list"></div>
+  </div>
+
+  <!-- TERMINI -->
+  <div id="t-termini" style="display:none">
+    <div class="c sec">
+      <div class="sec-title">Novi Termin</div>
+      <input id="et" placeholder="Naziv termina..." style="margin-bottom:8px">
+      <input type="date" id="ed" style="margin-bottom:8px">
+      <input type="time" id="etm" style="margin-bottom:8px">
+      <input id="eloc" placeholder="Lokacija (opciono)..." style="margin-bottom:8px">
+      <button class="b" onclick="addEvent()" style="width:100%;padding:11px;font-size:13px;font-weight:700;color:var(--ac)">Dodaj Termin</button>
+    </div>
+    <div id="events-list"></div>
+    <div class="c sec">
+      <div class="sec-title">To-Do Lista</div>
+      <div id="todo-list"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="tdi" placeholder="Novi zadatak..." style="font-size:12px;padding:8px 10px" onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="b" onclick="addTodo()" style="padding:8px 12px;font-size:18px;color:var(--ac);font-weight:900">+</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const EVCOL=["#00c8b4","#6ab4ff","#ffb347","#ff7eb3","#b47eff"];
+const SYSTEM=`Ti si Ana, ljubazna AI sekretarica koja govori srpski jezik prirodno i toplo.
+Pomažeš korisniku da organizuje dan. Primaš podatke o alarmima, beleškama, terminima i zadacima.
+Kada korisnik kaže da doda nešto, vrati komandu u tačnom formatu:
+[CMD:ADD_ALARM:{"label":"naziv","time":"HH:MM","rep":"none"}]
+[CMD:ADD_NOTE:{"title":"naziv","items":["stavka1","stavka2"]}]
+[CMD:ADD_EVENT:{"title":"naziv","time":"HH:MM","date":"","loc":""}]
+[CMD:ADD_TODO:{"text":"tekst zadatka"}]
+[CMD:DEL_ALARM:{"label":"naziv"}]
+[CMD:DEL_TODO:{"text":"tekst"}]
+Budi kratka, topla i prirodna kao prijatelj. Uvek odgovaraj na srpskom jeziku.`;
+
+let D={notes:[{id:1,title:"Shopping",items:["Hleb","Mleko"]},{id:2,title:"Ideje",items:["Plan A"]}],alarms:[{id:1,label:"Jutarnji",time:"07:00",active:true,fired:false,rep:"none"},{id:2,label:"Trening",time:"18:30",active:true,fired:false,rep:"none"}],events:[{id:1,title:"Sastanak",time:"14:00",date:"",color:"#00c8b4",loc:""},{id:2,title:"Paket",time:"15:30",date:"",color:"#6ab4ff",loc:""}],todos:[{id:1,text:"Zavrsi izvestaj",done:false},{id:2,text:"Kupi mleko",done:false}],chat:[{r:"a",t:"Zdravo! Ja sam Ana. Da bi razgovarali, potreban je besplatni Gemini kljuc. Klikni na zupcanik (⚙) gore desno i unesi kljuc. Lako je i potpuno besplatno!"}],apiMsgs:[],theme:"light",ac:"#00c8b4",gemKey:""};
+
+try{const s=localStorage.getItem("ana_d2");if(s){const p=JSON.parse(s);D=Object.assign({},D,p);D.apiMsgs=[];}}catch(e){}
+
+function save(){try{localStorage.setItem("ana_d2",JSON.stringify(D));}catch(e){}}
+
+// THEME
+const THEMES={light:{bg:"#e8edf3",tx:"#2a3a4a",dark:"#b8c5d0",light:"#ffffff"},dark:{bg:"#1a2030",tx:"#e0eaf5",dark:"#0d1118",light:"#252f42"},blue:{bg:"#dce8f5",tx:"#1a3050",dark:"#a8c0d8",light:"#f0f8ff"}};
+function setTheme(t){D.theme=t;const th=THEMES[t]||THEMES.light;document.documentElement.style.setProperty("--bg",th.bg);document.documentElement.style.setProperty("--tx",th.tx);document.documentElement.style.setProperty("--tx2",th.tx+"55");document.documentElement.style.setProperty("--dark",th.dark);document.documentElement.style.setProperty("--light",th.light);save();}
+function setAC(c){D.ac=c;document.documentElement.style.setProperty("--ac",c);renderAll();save();}
+function toggleSettings(){const el=document.getElementById("settings-box");el.style.display=el.style.display==="none"?"block":"none";}
+function saveGemKey(){const v=document.getElementById("gem-key").value.trim();if(!v)return;D.gemKey=v;save();const s=document.getElementById("key-status");s.textContent="Kljuc sacuvan! Ana je spremna.";s.style.color="var(--ac)";setTimeout(()=>{document.getElementById("settings-box").style.display="none";sendMsg("Zdravo Ana!");},1000);}
+
+// CLOCK
+function updClk(){const n=new Date();document.getElementById("clk").textContent=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");document.getElementById("dbar").textContent=n.toLocaleDateString("sr-RS",{weekday:"long",day:"numeric",month:"long"});}
+setInterval(updClk,1000);updClk();
+
+// ALARM ENGINE
+setInterval(()=>{const n=new Date(),day=n.getDay();D.alarms.forEach(a=>{if(!a.active)return;if(a.rep==="none"&&a.fired)return;if(a.rep==="weekdays"&&(day===0||day===6))return;if(a.rep==="weekend"&&day>0&&day<6)return;const[h,m]=a.time.split(":").map(Number);if(n.getHours()===h&&n.getMinutes()===m&&n.getSeconds()<5){if(a.rep==="none")a.fired=true;spk(a.label+". Vreme je!");renderAll();save();}});},2000);
+
+// TABS
+function swTab(t){["chat","notes","alarmi","termini"].forEach(x=>{document.getElementById("t-"+x).style.display=x===t?"block":"none";});document.querySelectorAll(".tb").forEach(b=>{b.classList.toggle("on",b.dataset.t===t);b.style.color=b.classList.contains("on")?D.ac:"";});renderAll();}
+document.querySelectorAll(".tb").forEach(b=>b.addEventListener("click",()=>swTab(b.dataset.t)));
+
+// RENDER
+const TRASH=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff6666" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`;
+const CHECK=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function renderAll(){renderQAlarms();renderQEvents();renderNotes();renderAlarms();renderEvents();renderTodos();renderChat();}
+function renderQAlarms(){const el=document.getElementById("qalarms");if(!el)return;el.innerHTML=D.alarms.filter(a=>a.active).slice(0,2).map(a=>`<div class="i q-item"><div style="flex:1"><div style="font-size:11px;font-weight:700">${esc(a.label)}</div><div style="font-size:10px;color:var(--tx2)">${a.time}</div></div><div style="width:16px;height:16px;border-radius:50%;background:${a.fired&&a.rep==="none"?"#aaa":"#ff4444"};display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:900">${a.fired&&a.rep==="none"?"✓":"!"}</div></div>`).join("");}
+function renderQEvents(){const el=document.getElementById("qevents");if(!el)return;el.innerHTML=D.events.slice(0,2).map(e=>`<div class="i tline" style="border-left-color:${e.color};padding:6px 8px;margin-bottom:4px"><div style="font-size:10px;font-weight:800;color:${e.color}">${e.time}</div><div style="font-size:11px;font-weight:600">${esc(e.title)}</div></div>`).join("");}
+function renderNotes(){const el=document.getElementById("notes-list");if(!el)return;el.innerHTML=D.notes.map(n=>`<div class="c sec" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:14px;font-weight:800">${esc(n.title)}</span><button class="b" onclick="delNote(${n.id})" style="padding:5px 9px">${TRASH}</button></div><div style="display:flex;flex-wrap:wrap;gap:5px">${n.items.map(i=>`<span class="i" style="padding:4px 10px;font-size:11px;font-weight:600">${esc(i)}</span>`).join("")}</div></div>`).join("");}
+function renderAlarms(){const el=document.getElementById("alarms-list");if(!el)return;el.innerHTML=D.alarms.map(a=>`<div class="c" style="padding:12px 14px;margin:0 12px 8px;display:flex;justify-content:space-between;align-items:center"><div style="flex:1"><div style="font-size:14px;font-weight:800">${esc(a.label)}</div><div style="font-size:12px;color:${D.ac};font-weight:700">${a.time} &bull; ${a.rep}</div></div><div style="display:flex;gap:8px;align-items:center"><div class="tgl" style="background:${a.active?"linear-gradient(90deg,"+D.ac+",#00a896)":"#ccc"}" onclick="togAlarm(${a.id})"><div class="tgl-k" style="left:${a.active?"21px":"3px"}"></div></div><button class="b" onclick="delAlarm(${a.id})" style="padding:5px 9px">${TRASH}</button></div></div>`).join("");}
+function renderEvents(){const el=document.getElementById("events-list");if(!el)return;el.innerHTML=[...D.events].sort((a,b)=>a.time.localeCompare(b.time)).map(e=>`<div class="c" style="padding:12px 14px;margin:0 12px 8px;border-left:4px solid ${e.color}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:800">${esc(e.title)}</div><div style="font-size:12px;color:${e.color};font-weight:700">${e.time}${e.date?" &bull; "+e.date:""}</div>${e.loc?`<div style="font-size:10px;color:var(--tx2)">${esc(e.loc)}</div>`:""}</div><button class="b" onclick="delEvent(${e.id})" style="padding:5px 9px">${TRASH}</button></div></div>`).join("");}
+function renderTodos(){const el=document.getElementById("todo-list");if(!el)return;el.innerHTML=D.todos.map(t=>`<div class="i" onclick="togTodo(${t.id})" style="padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px;cursor:pointer"><div style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.done?D.ac:"#bbb"};background:${t.done?D.ac:"transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s">${t.done?CHECK:""}</div><span style="font-size:12px;font-weight:600;flex:1;${t.done?"text-decoration:line-through;opacity:.4":""}">${esc(t.text)}</span><button class="b" onclick="event.stopPropagation();delTodo(${t.id})" style="padding:3px 7px">${TRASH}</button></div>`).join("");}
+function renderChat(){const el=document.getElementById("chat-box");if(!el)return;el.innerHTML=D.chat.slice(-30).map(m=>`<div class="msg-row ${m.r}">${m.r==="a"?'<div class="av-sm">&#x1F469;&#x200D;&#x1F4BC;</div>':""}<div class="bubble ${m.r}">${esc(m.t)}</div></div>`).join("");el.scrollTop=el.scrollHeight;}
+
+// CRUD
+function addNote(){const t=document.getElementById("nt").value.trim(),its=document.getElementById("ni").value.split("\n").filter(Boolean);if(!t)return;D.notes.push({id:Date.now(),title:t,items:its});document.getElementById("nt").value="";document.getElementById("ni").value="";renderAll();save();}
+function delNote(id){D.notes=D.notes.filter(n=>n.id!==id);renderAll();save();}
+function addAlarm(){const l=document.getElementById("al").value.trim(),t=document.getElementById("at").value,rep=document.getElementById("arep").value;if(!l||!t)return;D.alarms.push({id:Date.now(),label:l,time:t,active:true,fired:false,rep});document.getElementById("al").value="";document.getElementById("at").value="";renderAll();save();}
+function delAlarm(id){D.alarms=D.alarms.filter(a=>a.id!==id);renderAll();save();}
+function togAlarm(id){const a=D.alarms.find(x=>x.id===id);if(a){a.active=!a.active;a.fired=false;}renderAll();save();}
+function addEvent(){const t=document.getElementById("et").value.trim(),tm=document.getElementById("etm").value,d=document.getElementById("ed").value,loc=document.getElementById("eloc").value.trim();if(!t||!tm)return;D.events.push({id:Date.now(),title:t,time:tm,date:d,color:EVCOL[Math.floor(Math.random()*EVCOL.length)],loc});document.getElementById("et").value="";document.getElementById("etm").value="";document.getElementById("ed").value="";document.getElementById("eloc").value="";renderAll();save();}
+function delEvent(id){D.events=D.events.filter(e=>e.id!==id);renderAll();save();}
+function addTodo(){const t=document.getElementById("tdi").value.trim();if(!t)return;D.todos.push({id:Date.now(),text:t,done:false});document.getElementById("tdi").value="";renderTodos();save();}
+function delTodo(id){D.todos=D.todos.filter(t=>t.id!==id);renderTodos();save();}
+function togTodo(id){const t=D.todos.find(x=>x.id===id);if(t)t.done=!t.done;renderTodos();save();}
+
+// SPEECH
+let voices=[];speechSynthesis.onvoiceschanged=()=>{voices=speechSynthesis.getVoices();};
+function spk(txt){if(!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="sr-RS";u.rate=0.93;u.pitch=1.1;u.volume=1;const v=voices.find(x=>x.lang.startsWith("sr")||x.lang.startsWith("hr")||x.lang.startsWith("bs"));if(v)u.voice=v;u.onstart=()=>{document.getElementById("ana-status").textContent="🔊 Govori...";document.getElementById("ana-av").classList.add("talking");};u.onend=()=>{document.getElementById("ana-status").textContent="● Dostupna";document.getElementById("ana-av").classList.remove("talking");};speechSynthesis.speak(u);}
+
+// MIC
+let rec=null,isLis=false;
+function togMic(){if(isLis){rec?.stop();return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){spk("Koristite Chrome.");return;}rec=new SR();rec.lang="sr-RS";rec.interimResults=false;rec.onstart=()=>{isLis=true;document.getElementById("mic-btn").classList.add("on");document.getElementById("mic-ring").style.display="block";document.getElementById("mic-ico").setAttribute("stroke","#fff");document.getElementById("ana-status").textContent="🎤 Slusa...";};rec.onresult=e=>{const t=e.results[0][0].transcript;sendMsg(t);};rec.onerror=()=>stopMic();rec.onend=()=>stopMic();rec.start();}
+function stopMic(){isLis=false;document.getElementById("mic-btn").classList.remove("on");document.getElementById("mic-ring").style.display="none";document.getElementById("mic-ico").setAttribute("stroke","var(--ac)");document.getElementById("ana-status").textContent="● Dostupna";}
+
+// SEND TO GEMINI
+async function sendMsg(txt){
+  if(!txt||!txt.trim())return;
+  if(!D.gemKey){
+    D.chat.push({r:"u",t:txt});
+    D.chat.push({r:"a",t:"Da bi Ana mogla da odgovara, potreban je besplatni Gemini kljuc. Klikni na zupcanik ⚙ gore desno i unesi kljuc. Ide na aistudio.google.com/app/apikey - potpuno besplatno!"});
+    renderChat();
+    document.getElementById("settings-box").style.display="block";
+    return;
+  }
+  D.chat.push({r:"u",t:txt});
+  renderChat();
+  setThinking(true);
+
+  const n=new Date();
+  const ctx=`PODACI:
+Alarmi: ${D.alarms.map(a=>a.label+" u "+a.time).join(", ")||"nema"}
+Beleske: ${D.notes.map(n=>n.title).join(", ")||"nema"}
+Termini: ${D.events.map(e=>e.title+" u "+e.time).join(", ")||"nema"}
+Zadaci: ${D.todos.filter(t=>!t.done).map(t=>t.text).join(", ")||"nema"}
+Vreme: ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}
+Datum: ${n.toLocaleDateString("sr-RS",{weekday:"long",day:"numeric",month:"long"})}
+Korisnik: ${txt}`;
+
+  D.apiMsgs=[...D.apiMsgs.slice(-8),{role:"user",parts:[{text:ctx}]}];
+
+  const timeout=setTimeout(()=>{setThinking(false);const er="Veza je spora, pokusaj ponovo.";D.chat.push({r:"a",t:er});renderChat();spk(er);},18000);
+
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${D.gemKey}`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        system_instruction:{parts:[{text:SYSTEM}]},
+        contents:D.apiMsgs,
+        generationConfig:{maxOutputTokens:500,temperature:0.8}
+      })
+    });
+    clearTimeout(timeout);
+    const data=await res.json();
+    if(data.error){
+      setThinking(false);
+      const er="API greska: "+data.error.message+". Provjeri Gemini kljuc u podesavanjima.";
+      D.chat.push({r:"a",t:er});renderChat();spk(er);return;
+    }
+    const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||"Nisam razumela.";
+    const clean=parseCommands(raw);
+    D.apiMsgs=[...D.apiMsgs,{role:"model",parts:[{text:clean}]}];
+    setThinking(false);
+    D.chat.push({r:"a",t:clean});
+    renderAll();save();spk(clean);
+  }catch(e){
+    clearTimeout(timeout);
+    setThinking(false);
+    const er=navigator.onLine?"Greska: "+e.message:"Nema interneta.";
+    D.chat.push({r:"a",t:er});renderChat();spk(er);
+  }
+}
+
+function setThinking(on){const el=document.getElementById("chat-box");if(!el)return;const ex=el.querySelector(".thinking-row");if(on&&!ex){const d=document.createElement("div");d.className="msg-row a thinking-row";d.innerHTML='<div class="av-sm">&#x1F469;&#x200D;&#x1F4BC;</div><div class="i dots-wrap"><div class="dot-ani"></div><div class="dot-ani"></div><div class="dot-ani"></div></div>';el.appendChild(d);el.scrollTop=el.scrollHeight;document.getElementById("ana-status").textContent="💭 Razmislja...";}else if(!on&&ex){ex.remove();document.getElementById("ana-status").textContent="● Dostupna";}}
+
+function parseCommands(text){const re=/\[CMD:(\w+):(\{.*?\})\]/g;let m,clean=text;while((m=re.exec(text))!==null){const cmd=m[1];let d;try{d=JSON.parse(m[2]);}catch{continue;}clean=clean.replace(m[0],"");if(cmd==="ADD_ALARM")D.alarms.push({id:Date.now(),label:d.label||"Alarm",time:d.time||"08:00",active:true,fired:false,rep:d.rep||"none"});else if(cmd==="ADD_NOTE")D.notes.push({id:Date.now(),title:d.title||"Beleska",items:d.items||[]});else if(cmd==="ADD_EVENT")D.events.push({id:Date.now(),title:d.title||"Termin",time:d.time||"12:00",date:d.date||"",color:EVCOL[Math.floor(Math.random()*EVCOL.length)],loc:d.loc||""});else if(cmd==="ADD_TODO")D.todos.push({id:Date.now(),text:d.text||"Zadatak",done:false});else if(cmd==="DEL_ALARM")D.alarms=D.alarms.filter(a=>a.label!==d.label);else if(cmd==="DEL_TODO")D.todos=D.todos.filter(t=>t.text!==d.text);}return clean.trim();}
+
+window.addEventListener("online",()=>document.getElementById("offbadge").style.display="none");
+window.addEventListener("offline",()=>document.getElementById("offbadge").style.display="block");
+if(!navigator.onLine)document.getElementById("offbadge").style.display="block";
+
+function init(){setTheme(D.theme||"light");document.documentElement.style.setProperty("--ac",D.ac||"#00c8b4");if(D.gemKey)document.getElementById("gem-key").value=D.gemKey;renderAll();swTab("chat");}
+init();
+</script>
+</body>
+</html>
