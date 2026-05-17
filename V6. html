@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e8edf3">
+<title>Ana – AI Sekretarica</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#e8edf3;--tx:#2a3a4a;--tx2:#2a3a4a55;--ac:#00c8b4;
+  --dark:#b8c5d0;--light:#ffffff;--r:16px;
+}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.c{background:var(--bg);box-shadow:6px 6px 14px var(--dark),-6px -6px 14px var(--light);border-radius:var(--r)}
+.i{background:var(--bg);box-shadow:inset 4px 4px 10px var(--dark),inset -4px -4px 10px var(--light);border-radius:12px}
+.b{background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light);border-radius:50px;border:none;cursor:pointer;color:var(--tx);font-family:inherit;transition:all .2s;outline:none}
+.b:active{box-shadow:inset 3px 3px 8px var(--dark),inset -3px -3px 8px var(--light)}
+input,textarea,select{background:var(--bg);box-shadow:inset 4px 4px 10px var(--dark),inset -4px -4px 10px var(--light);border-radius:12px;border:none;color:var(--tx);font-family:inherit;outline:none;width:100%;padding:10px 14px;font-size:13px}
+#app{max-width:480px;margin:0 auto;padding:0 0 20px}
+
+/* HEADER */
+.hdr{padding:14px 14px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.clk{font-size:28px;font-weight:900;letter-spacing:-1px}
+.dbar{padding:4px 14px 8px;font-size:12px;font-weight:700;color:var(--ac)}
+.tabs{display:inline-flex;gap:2px;padding:5px 6px}
+.tb{padding:7px 11px;font-size:12px;font-weight:700;border-radius:50px;border:none;cursor:pointer;font-family:inherit;background:transparent;box-shadow:none;color:var(--tx2);transition:all .2s}
+.tb.on{background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light);color:var(--ac)}
+
+/* ANA CARD */
+.ana-card{margin:10px 12px;padding:14px;display:flex;align-items:center;gap:12px}
+.ana-av{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--ac),#00a896);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:0 4px 18px #00c8b455;transition:all .3s}
+.ana-av.talking{animation:avpulse 0.6s ease-in-out infinite alternate;box-shadow:0 0 28px #00c8b488,0 0 50px #00c8b433}
+.ana-av.listening{box-shadow:0 0 28px #ff7eb388,0 0 50px #ff7eb333;animation:avpulse2 0.4s ease-in-out infinite alternate}
+@keyframes avpulse{from{transform:scale(1)}to{transform:scale(1.1)}}
+@keyframes avpulse2{from{transform:scale(0.97)}to{transform:scale(1.06)}}
+@keyframes si{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dotani{0%,100%{height:4px;opacity:.4}50%{height:20px;opacity:1}}
+@keyframes ringpulse{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.6);opacity:0}}
+@keyframes waveani{0%,100%{scaleY:.3}50%{scaleY:1}}
+
+/* VOICE RINGS */
+.voice-rings{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ring{position:absolute;border-radius:50%;border:2px solid var(--ac);opacity:0}
+.ring1{width:80px;height:80px}
+.ring2{width:100px;height:100px}
+.ring3{width:120px;height:120px}
+.active .ring1{animation:ringpulse 1.5s ease-out infinite}
+.active .ring2{animation:ringpulse 1.5s ease-out .3s infinite}
+.active .ring3{animation:ringpulse 1.5s ease-out .6s infinite}
+
+/* WAVEFORM */
+.waveform{display:flex;align-items:center;gap:3px;height:32px;margin:8px 0}
+.wave-bar{width:3px;border-radius:3px;background:var(--ac);height:4px;transition:height .1s ease}
+.waveform.active .wave-bar{animation:dotani .6s ease infinite}
+.waveform.active .wave-bar:nth-child(2){animation-delay:.1s}
+.waveform.active .wave-bar:nth-child(3){animation-delay:.2s}
+.waveform.active .wave-bar:nth-child(4){animation-delay:.15s}
+.waveform.active .wave-bar:nth-child(5){animation-delay:.05s}
+.waveform.active .wave-bar:nth-child(6){animation-delay:.25s}
+.waveform.active .wave-bar:nth-child(7){animation-delay:.1s}
+.waveform.active .wave-bar:nth-child(8){animation-delay:.2s}
+
+/* CHAT */
+.chat-wrap{margin:0 12px 10px;position:relative}
+.chat-box{padding:12px;min-height:200px;max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+.msg-row{display:flex;animation:si .25s ease}
+.msg-row.u{justify-content:flex-end}
+.msg-row.a{justify-content:flex-start;align-items:flex-end;gap:7px}
+.av-sm{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--ac),#00a896);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.bubble{max-width:78%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.55;word-break:break-word}
+.bubble.u{background:linear-gradient(135deg,var(--ac),#00a896);color:#fff;border-radius:18px 18px 4px 18px;box-shadow:0 4px 14px #00c8b444}
+.bubble.a{background:var(--bg);box-shadow:4px 4px 10px var(--dark),-4px -4px 10px var(--light);border-radius:18px 18px 18px 4px}
+.dots-row{display:flex;gap:6px;padding:12px 14px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ac);animation:dotani .7s ease infinite alternate}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+
+/* BIG MIC BUTTON */
+.mic-center{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.mic-big-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:120px;height:120px}
+.mic-big{width:86px;height:86px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;background:var(--bg);box-shadow:8px 8px 20px var(--dark),-8px -8px 20px var(--light);position:relative;z-index:2}
+.mic-big.listening{background:linear-gradient(135deg,#ff7eb3,#ff4da6)!important;box-shadow:0 0 30px #ff7eb388!important}
+.mic-big.speaking{background:linear-gradient(135deg,var(--ac),#00a896)!important;box-shadow:0 0 30px #00c8b488!important}
+.mic-label{font-size:11px;font-weight:700;color:var(--tx2);margin-top:6px;transition:color .3s}
+
+/* INPUT BAR */
+.inp-bar{margin:8px 12px;padding:8px;display:flex;gap:8px;align-items:center}
+.inp-mic{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--bg);box-shadow:3px 3px 8px var(--dark),-3px -3px 8px var(--light);flex-shrink:0}
+.send-btn{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--bg);box-shadow:3px 3px 8px var(--dark),-3px -3px 8px var(--light);flex-shrink:0}
+
+/* QUICK SUGGESTIONS */
+.sugg-wrap{display:flex;gap:6px;flex-wrap:wrap;margin:0 12px 10px}
+.sugg{padding:7px 12px;font-size:10px;font-weight:700;color:var(--ac);border:none}
+
+/* QUICK GRID */
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 12px 10px}
+.q-sec{padding:12px 11px}
+.q-title{font-size:11px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:5px;color:var(--tx)}
+
+/* SECTIONS */
+.sec{margin:0 12px 10px;padding:14px}
+.sec-title{font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ac)}
+.tline{padding:6px 9px;margin-bottom:4px;border-radius:0 10px 10px 0;border-left:3px solid}
+.tgl{width:42px;height:24px;border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;transition:background .3s}
+.tgl-k{position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+#offbadge{position:fixed;top:6px;right:8px;background:#ff6644;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;z-index:999;display:none}
+
+/* SETTINGS */
+.set-box{margin:0 12px 10px;padding:16px}
+</style>
+</head>
+<body>
+<div id="offbadge">OFFLINE</div>
+<div id="app">
+
+  <div class="hdr">
+    <div>
+      <div class="c tabs" id="tabbar">
+        <button class="tb on" data-t="chat">Ana</button>
+        <button class="tb" data-t="notes">Beleske</button>
+        <button class="tb" data-t="alarmi">Alarmi</button>
+        <button class="tb" data-t="termini">Termini</button>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="clk" id="clk">00:00</div>
+      <div style="font-size:11px;color:var(--tx2);font-weight:600" id="uname-lbl">Sasa</div>
+    </div>
+  </div>
+  <div class="dbar" id="dbar"></div>
+
+  <!-- CHAT TAB -->
+  <div id="t-chat">
+
+    <!-- ANA PROFIL -->
+    <div class="c ana-card">
+      <div class="ana-av" id="ana-av">&#x1F469;&#x200D;&#x1F4BC;</div>
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:900">Ana</div>
+        <div style="font-size:11px;color:var(--ac);font-weight:700" id="ana-status">&#x25CF; Dostupna</div>
+        <div style="font-size:10px;color:var(--tx2);margin-top:2px">AI Sekretarica &bull; 100% Offline</div>
+      </div>
+      <button class="b" onclick="toggleSettings()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings-box" style="display:none">
+      <div class="c set-box">
+        <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ac)">Tema</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="b" onclick="setTheme('light')" style="flex:1;padding:9px;font-size:11px;font-weight:700">Svetla</button>
+          <button class="b" onclick="setTheme('dark')" style="flex:1;padding:9px;font-size:11px;font-weight:700">Tamna</button>
+          <button class="b" onclick="setTheme('blue')" style="flex:1;padding:9px;font-size:11px;font-weight:700">Plava</button>
+        </div>
+        <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ac)">Boja akcenta</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <div onclick="setAC('#00c8b4')" style="width:30px;height:30px;border-radius:50%;background:#00c8b4;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#6ab4ff')" style="width:30px;height:30px;border-radius:50%;background:#6ab4ff;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#ffb347')" style="width:30px;height:30px;border-radius:50%;background:#ffb347;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#ff7eb3')" style="width:30px;height:30px;border-radius:50%;background:#ff7eb3;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+          <div onclick="setAC('#b47eff')" style="width:30px;height:30px;border-radius:50%;background:#b47eff;cursor:pointer;box-shadow:2px 2px 6px rgba(0,0,0,.2)"></div>
+        </div>
+        <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ac)">Ime</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <input id="name-inp" placeholder="Tvoje ime..." style="font-size:13px">
+          <button class="b" onclick="saveName()" style="padding:10px 14px;font-size:12px;font-weight:700;color:var(--ac)">OK</button>
+        </div>
+        <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--ac)">Glas Ane</div>
+        <div style="display:flex;gap:8px">
+          <button class="b" onclick="testVoice()" style="flex:1;padding:9px;font-size:11px;font-weight:700;color:var(--ac)">Test glasa</button>
+          <button class="b" onclick="D.vol=Math.min(1,D.vol+.1);save()" style="flex:1;padding:9px;font-size:11px;font-weight:700">+ Jace</button>
+          <button class="b" onclick="D.vol=Math.max(0,D.vol-.1);save()" style="flex:1;padding:9px;font-size:11px;font-weight:700">- Tise</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK GRID -->
+    <div class="qgrid">
+      <div class="c q-sec">
+        <div class="q-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Alarmi
+        </div>
+        <div id="qalarms"></div>
+      </div>
+      <div class="c q-sec">
+        <div class="q-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Termini
+        </div>
+        <div id="qevents"></div>
+      </div>
+    </div>
+
+    <!-- CHAT MESSAGES -->
+    <div class="c chat-wrap">
+      <div class="chat-box" id="chat-box"></div>
+    </div>
+
+    <!-- BIG MIC -->
+    <div class="mic-center">
+      <div class="mic-big-wrap" id="mic-rings-wrap">
+        <div class="ring ring1" id="r1"></div>
+        <div class="ring ring2" id="r2"></div>
+        <div class="ring ring3" id="r3"></div>
+        <button class="mic-big" id="mic-big" onclick="togMic()">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2" stroke-linecap="round" id="mic-ico"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+      </div>
+      <div class="waveform" id="waveform">
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+      </div>
+      <div class="mic-label" id="mic-label">Pritisni da govoriš</div>
+    </div>
+
+    <!-- TEXT INPUT -->
+    <div class="c inp-bar">
+      <input id="chat-inp" placeholder="Ili ukucaj poruku..." onkeydown="if(event.key==='Enter'){var v=this.value;this.value='';handleInput(v)}" style="font-size:13px">
+      <button class="send-btn" onclick="var v=document.getElementById('chat-inp').value;document.getElementById('chat-inp').value='';handleInput(v)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+
+    <!-- SUGGESTIONS -->
+    <div class="sugg-wrap">
+      <button class="b sugg" onclick="handleInput('Sta imam danas')">Sta imam danas?</button>
+      <button class="b sugg" onclick="handleInput('Dodaj alarm za 8 sati')">Alarm 8:00</button>
+      <button class="b sugg" onclick="handleInput('Koliko je sati')">Koliko je sati?</button>
+      <button class="b sugg" onclick="handleInput('Moji zadaci')">Zadaci</button>
+      <button class="b sugg" onclick="handleInput('Kakvo je vreme')">Vreme?</button>
+      <button class="b sugg" onclick="handleInput('Dodaj zadatak kupi hleb')">Novi zadatak</button>
+    </div>
+  </div>
+
+  <!-- BELESKE TAB -->
+  <div id="t-notes" style="display:none">
+    <div class="c sec">
+      <div class="sec-title">Nova Beleska</div>
+      <input id="nt" placeholder="Naziv beleske..." style="margin-bottom:8px">
+      <textarea id="ni" placeholder="Stavke (svaka u novom redu)..." rows="3" style="padding:10px 14px;font-size:12px;resize:none;margin-bottom:8px;display:block"></textarea>
+      <button class="b" onclick="addNote()" style="width:100%;padding:11px;font-size:13px;font-weight:700;color:var(--ac)">Sacuvaj</button>
+    </div>
+    <div id="notes-list"></div>
+  </div>
+
+  <!-- ALARMI TAB -->
+  <div id="t-alarmi" style="display:none">
+    <div class="c sec">
+      <div class="sec-title">Novi Alarm</div>
+      <input id="al" placeholder="Naziv alarma..." style="margin-bottom:8px">
+      <input type="time" id="at" style="margin-bottom:8px">
+      <select id="arep" style="margin-bottom:10px;font-size:12px">
+        <option value="none">Jednom</option>
+        <option value="daily">Svaki dan</option>
+        <option value="weekdays">Radni dani</option>
+        <option value="weekend">Vikend</option>
+      </select>
+      <button class="b" onclick="addAlarm()" style="width:100%;padding:11px;font-size:13px;font-weight:700;color:var(--ac)">Postavi Alarm</button>
+    </div>
+    <div id="alarms-list"></div>
+  </div>
+
+  <!-- TERMINI TAB -->
+  <div id="t-termini" style="display:none">
+    <div class="c sec">
+      <div class="sec-title">Novi Termin</div>
+      <input id="et" placeholder="Naziv termina..." style="margin-bottom:8px">
+      <input type="date" id="ed" style="margin-bottom:8px">
+      <input type="time" id="etm" style="margin-bottom:8px">
+      <input id="eloc" placeholder="Lokacija (opciono)..." style="margin-bottom:8px">
+      <button class="b" onclick="addEvent()" style="width:100%;padding:11px;font-size:13px;font-weight:700;color:var(--ac)">Dodaj Termin</button>
+    </div>
+    <div id="events-list"></div>
+    <div class="c sec">
+      <div class="sec-title">To-Do Lista</div>
+      <div id="todo-list"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="tdi" placeholder="Novi zadatak..." style="font-size:12px;padding:8px 10px" onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="b" onclick="addTodo()" style="padding:8px 12px;font-size:18px;color:var(--ac);font-weight:900">+</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const EVCOL=["#00c8b4","#6ab4ff","#ffb347","#ff7eb3","#b47eff"];
+
+let D={
+  notes:[{id:1,title:"Shopping lista",items:["Hleb","Mleko","Jaja"]},{id:2,title:"Ideje",items:["Plan A","Plan B"]}],
+  alarms:[{id:1,label:"Jutarnji",time:"07:00",active:true,fired:false,rep:"none"},{id:2,label:"Trening",time:"18:30",active:true,fired:false,rep:"none"}],
+  events:[{id:1,title:"Sastanak",time:"14:00",date:"",color:"#00c8b4",loc:""},{id:2,title:"Paket",time:"15:30",date:"",color:"#6ab4ff",loc:""}],
+  todos:[{id:1,text:"Zavrsi izvestaj",done:false},{id:2,text:"Kupi mleko",done:false}],
+  chat:[{r:"a",t:"Zdravo! Ja sam Ana, tvoja AI sekretarica. Radim potpuno offline. Možeš mi govoriti ili kucati. Recite šta vam treba!"}],
+  theme:"light",ac:"#00c8b4",uname:"Sasa",vol:0.9,
+  mem:{lastTopic:"",userName:"Sasa"},
+};
+try{const s=localStorage.getItem("ana_off");if(s){const p=JSON.parse(s);D=Object.assign({},D,p);}}catch(e){}
+function save(){try{localStorage.setItem("ana_off",JSON.stringify(D));}catch(e){}}
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+const THEMES={
+  light:{bg:"#e8edf3",tx:"#2a3a4a",dark:"#b8c5d0",light:"#ffffff"},
+  dark:{bg:"#1a2030",tx:"#e0eaf5",dark:"#0d1118",light:"#252f42"},
+  blue:{bg:"#dce8f5",tx:"#1a3050",dark:"#a8c0d8",light:"#f0f8ff"},
+};
+function setTheme(t){
+  D.theme=t;const th=THEMES[t]||THEMES.light;
+  document.documentElement.style.setProperty("--bg",th.bg);
+  document.documentElement.style.setProperty("--tx",th.tx);
+  document.documentElement.style.setProperty("--tx2",th.tx+"55");
+  document.documentElement.style.setProperty("--dark",th.dark);
+  document.documentElement.style.setProperty("--light",th.light);
+  save();
+}
+function setAC(c){D.ac=c;document.documentElement.style.setProperty("--ac",c);renderAll();save();}
+function toggleSettings(){const el=document.getElementById("settings-box");el.style.display=el.style.display==="none"?"block":"none";}
+function saveName(){const v=document.getElementById("name-inp").value.trim();if(!v)return;D.uname=v;D.mem.userName=v;document.getElementById("uname-lbl").textContent=v;save();}
+
+// ═══════════════════════════════════════════════
+// CLOCK + ALARM ENGINE
+// ═══════════════════════════════════════════════
+function updClk(){
+  const n=new Date();
+  document.getElementById("clk").textContent=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");
+  document.getElementById("dbar").textContent=n.toLocaleDateString("sr-RS",{weekday:"long",day:"numeric",month:"long"});
+}
+setInterval(updClk,1000);updClk();
+setInterval(()=>{
+  const n=new Date(),day=n.getDay();
+  D.alarms.forEach(a=>{
+    if(!a.active)return;
+    if(a.rep==="none"&&a.fired)return;
+    if(a.rep==="weekdays"&&(day===0||day===6))return;
+    if(a.rep==="weekend"&&day>0&&day<6)return;
+    const[h,m]=a.time.split(":").map(Number);
+    if(n.getHours()===h&&n.getMinutes()===m&&n.getSeconds()<5){
+      if(a.rep==="none")a.fired=true;
+      anaSpeak(`${a.label}! Vreme je, ${D.uname}!`);
+      renderAll();save();
+    }
+  });
+},2000);
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+function swTab(t){
+  ["chat","notes","alarmi","termini"].forEach(x=>{
+    document.getElementById("t-"+x).style.display=x===t?"block":"none";
+  });
+  document.querySelectorAll(".tb").forEach(b=>{
+    b.classList.toggle("on",b.dataset.t===t);
+    b.style.color=b.classList.contains("on")?D.ac:"";
+  });
+  renderAll();
+}
+document.querySelectorAll(".tb").forEach(b=>b.addEventListener("click",()=>swTab(b.dataset.t)));
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+const TRASH=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff6666" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`;
+const CHECK=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function renderAll(){
+  renderQAlarms();renderQEvents();renderNotes();renderAlarms();renderEvents();renderTodos();renderChat();
+}
+function renderQAlarms(){
+  const el=document.getElementById("qalarms");if(!el)return;
+  el.innerHTML=D.alarms.filter(a=>a.active).slice(0,2).map(a=>`
+    <div class="i" style="padding:7px 9px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:11px;font-weight:700">${esc(a.label)}</div><div style="font-size:10px;color:var(--tx2)">${a.time}</div></div>
+      <div style="width:16px;height:16px;border-radius:50%;background:${a.fired&&a.rep==="none"?"#aaa":"#ff4444"};display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:900">${a.fired&&a.rep==="none"?"✓":"!"}</div>
+    </div>`).join("");
+}
+function renderQEvents(){
+  const el=document.getElementById("qevents");if(!el)return;
+  el.innerHTML=D.events.slice(0,2).map(e=>`
+    <div class="i tline" style="border-left-color:${e.color};padding:6px 8px;margin-bottom:4px">
+      <div style="font-size:10px;font-weight:800;color:${e.color}">${e.time}</div>
+      <div style="font-size:11px;font-weight:600">${esc(e.title)}</div>
+    </div>`).join("");
+}
+function renderNotes(){
+  const el=document.getElementById("notes-list");if(!el)return;
+  el.innerHTML=D.notes.map(n=>`
+    <div class="c sec" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:14px;font-weight:800">${esc(n.title)}</span>
+        <button class="b" onclick="delNote(${n.id})" style="padding:5px 9px">${TRASH}</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${n.items.map(i=>`<span class="i" style="padding:4px 10px;font-size:11px;font-weight:600">${esc(i)}</span>`).join("")}
+      </div>
+    </div>`).join("");
+}
+function renderAlarms(){
+  const el=document.getElementById("alarms-list");if(!el)return;
+  el.innerHTML=D.alarms.map(a=>`
+    <div class="c" style="padding:12px 14px;margin:0 12px 8px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:14px;font-weight:800">${esc(a.label)}</div>
+      <div style="font-size:12px;color:${D.ac};font-weight:700">${a.time} &bull; ${a.rep}</div>
+      ${a.fired&&a.rep==="none"?'<div style="font-size:10px;color:#aaa">Oglasio se</div>':""}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="tgl" style="background:${a.active?"linear-gradient(90deg,"+D.ac+",#00a896)":"#ccc"}" onclick="togAlarm(${a.id})">
+          <div class="tgl-k" style="left:${a.active?"21px":"3px"}"></div>
+        </div>
+        <button class="b" onclick="delAlarm(${a.id})" style="padding:5px 9px">${TRASH}</button>
+      </div>
+    </div>`).join("");
+}
+function renderEvents(){
+  const el=document.getElementById("events-list");if(!el)return;
+  el.innerHTML=[...D.events].sort((a,b)=>a.time.localeCompare(b.time)).map(e=>`
+    <div class="c" style="padding:12px 14px;margin:0 12px 8px;border-left:4px solid ${e.color}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:800">${esc(e.title)}</div>
+          <div style="font-size:12px;color:${e.color};font-weight:700">${e.time}${e.date?" &bull; "+e.date:""}</div>
+          ${e.loc?`<div style="font-size:10px;color:var(--tx2)">${esc(e.loc)}</div>`:""}
+        </div>
+        <button class="b" onclick="delEvent(${e.id})" style="padding:5px 9px">${TRASH}</button>
+      </div>
+    </div>`).join("");
+}
+function renderTodos(){
+  const el=document.getElementById("todo-list");if(!el)return;
+  el.innerHTML=D.todos.map(t=>`
+    <div class="i" onclick="togTodo(${t.id})" style="padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px;cursor:pointer">
+      <div style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.done?D.ac:"#bbb"};background:${t.done?D.ac:"transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s">${t.done?CHECK:""}</div>
+      <span style="font-size:12px;font-weight:600;flex:1;${t.done?"text-decoration:line-through;opacity:.4":""}">${esc(t.text)}</span>
+      <button class="b" onclick="event.stopPropagation();delTodo(${t.id})" style="padding:3px 7px">${TRASH}</button>
+    </div>`).join("");
+}
+function renderChat(){
+  const el=document.getElementById("chat-box");if(!el)return;
+  el.innerHTML=D.chat.slice(-30).map(m=>`
+    <div class="msg-row ${m.r}">
+      ${m.r==="a"?'<div class="av-sm">&#x1F469;&#x200D;&#x1F4BC;</div>':""}
+      <div class="bubble ${m.r}">${esc(m.t)}</div>
+    </div>`).join("");
+  el.scrollTop=el.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════
+// CRUD
+// ═══════════════════════════════════════════════
+function addNote(){const t=document.getElementById("nt").value.trim(),its=document.getElementById("ni").value.split("\n").filter(Boolean);if(!t)return;D.notes.push({id:Date.now(),title:t,items:its});document.getElementById("nt").value="";document.getElementById("ni").value="";renderAll();save();}
+function delNote(id){D.notes=D.notes.filter(n=>n.id!==id);renderAll();save();}
+function addAlarm(){const l=document.getElementById("al").value.trim(),t=document.getElementById("at").value,rep=document.getElementById("arep").value;if(!l||!t)return;D.alarms.push({id:Date.now(),label:l,time:t,active:true,fired:false,rep});document.getElementById("al").value="";document.getElementById("at").value="";renderAll();save();}
+function delAlarm(id){D.alarms=D.alarms.filter(a=>a.id!==id);renderAll();save();}
+function togAlarm(id){const a=D.alarms.find(x=>x.id===id);if(a){a.active=!a.active;a.fired=false;}renderAll();save();}
+function addEvent(){const t=document.getElementById("et").value.trim(),tm=document.getElementById("etm").value,d=document.getElementById("ed").value,loc=document.getElementById("eloc").value.trim();if(!t||!tm)return;D.events.push({id:Date.now(),title:t,time:tm,date:d,color:EVCOL[Math.floor(Math.random()*EVCOL.length)],loc});document.getElementById("et").value="";document.getElementById("etm").value="";document.getElementById("ed").value="";document.getElementById("eloc").value="";renderAll();save();}
+function delEvent(id){D.events=D.events.filter(e=>e.id!==id);renderAll();save();}
+function addTodo(){const t=document.getElementById("tdi").value.trim();if(!t)return;D.todos.push({id:Date.now(),text:t,done:false});document.getElementById("tdi").value="";renderTodos();save();}
+function delTodo(id){D.todos=D.todos.filter(t=>t.id!==id);renderTodos();save();}
+function togTodo(id){const t=D.todos.find(x=>x.id===id);if(t)t.done=!t.done;renderTodos();save();}
+
+// ═══════════════════════════════════════════════
+// SPEECH SYNTHESIS – AUDIO PROCESSING
+// ═══════════════════════════════════════════════
+let voices=[];let isSpeaking=false;let synthQueue=[];
+speechSynthesis.onvoiceschanged=()=>{voices=speechSynthesis.getVoices();};
+
+function getBestVoice(){
+  const all=speechSynthesis.getVoices();
+  // Priority: srpski > hrvatski > bosanski > engleski ženski
+  return all.find(v=>v.lang.startsWith("sr"))
+    ||all.find(v=>v.lang.startsWith("hr"))
+    ||all.find(v=>v.lang.startsWith("bs"))
+    ||all.find(v=>v.name.toLowerCase().includes("female")||v.name.includes("Samantha")||v.name.includes("Google UK English Female"))
+    ||all[0];
+}
+
+function anaSpeak(txt){
+  if(!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  isSpeaking=true;
+  setAnaState("speaking");
+
+  // Split into sentences for more natural flow
+  const sentences=txt.match(/[^.!?]+[.!?]*/g)||[txt];
+  let i=0;
+  function speakNext(){
+    if(i>=sentences.length){isSpeaking=false;setAnaState("idle");return;}
+    const u=new SpeechSynthesisUtterance(sentences[i].trim());
+    u.lang="sr-RS";
+    u.rate=0.88;   // Sporije = prirodnije
+    u.pitch=1.05;  // Blago više = ženski glas
+    u.volume=D.vol||0.9;
+    const v=getBestVoice();if(v)u.voice=v;
+    u.onend=()=>{i++;speakNext();};
+    u.onerror=()=>{isSpeaking=false;setAnaState("idle");};
+    speechSynthesis.speak(u);
+  }
+  speakNext();
+}
+
+function stopSpeaking(){
+  speechSynthesis.cancel();
+  isSpeaking=false;
+  setAnaState("idle");
+}
+
+function testVoice(){
+  anaSpeak(`Zdravo ${D.uname}! Ja sam Ana, vaša AI sekretarica. Kako mogu da vam pomognem danas?`);
+}
+
+// ═══════════════════════════════════════════════
+// VISUAL STATE
+// ═══════════════════════════════════════════════
+function setAnaState(state){
+  const av=document.getElementById("ana-av");
+  const mb=document.getElementById("mic-big");
+  const st=document.getElementById("ana-status");
+  const lbl=document.getElementById("mic-label");
+  const wf=document.getElementById("waveform");
+  const ico=document.getElementById("mic-ico");
+  const r1=document.getElementById("r1");
+  const r2=document.getElementById("r2");
+  const r3=document.getElementById("r3");
+
+  av.className="ana-av";mb.className="mic-big";
+  [r1,r2,r3].forEach(r=>r.style.animation="none");
+  wf.className="waveform";
+
+  if(state==="listening"){
+    av.classList.add("listening");mb.classList.add("listening");
+    r1.style.animation="ringpulse 1.2s ease-out infinite";
+    r2.style.animation="ringpulse 1.2s ease-out .25s infinite";
+    r3.style.animation="ringpulse 1.2s ease-out .5s infinite";
+    [r1,r2,r3].forEach(r=>{r.style.borderColor="#ff7eb3";});
+    wf.classList.add("active");
+    st.textContent="🎤 Slušam...";
+    lbl.textContent="Govorite...";
+    ico.setAttribute("stroke","#fff");
+  }else if(state==="speaking"){
+    av.classList.add("talking");mb.classList.add("speaking");
+    r1.style.animation="ringpulse 1.5s ease-out infinite";
+    r2.style.animation="ringpulse 1.5s ease-out .3s infinite";
+    r3.style.animation="ringpulse 1.5s ease-out .6s infinite";
+    [r1,r2,r3].forEach(r=>{r.style.borderColor=D.ac;});
+    wf.classList.add("active");
+    st.textContent="🔊 Ana govori...";
+    lbl.textContent="Tapni da prekinesh";
+    ico.setAttribute("stroke",D.ac);
+  }else if(state==="thinking"){
+    st.textContent="💭 Razmišljam...";
+    lbl.textContent="Trenutak...";
+    ico.setAttribute("stroke",D.ac);
+  }else{
+    st.textContent="● Dostupna";
+    lbl.textContent="Pritisni da govoriš";
+    ico.setAttribute("stroke",D.ac);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MICROPHONE
+// ═══════════════════════════════════════════════
+let rec=null,isLis=false;
+function togMic(){
+  if(isSpeaking){stopSpeaking();return;}
+  if(isLis){rec?.stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){anaSpeak("Za prepoznavanje govora koristite Chrome browser.");return;}
+  rec=new SR();
+  rec.lang="sr-RS";rec.interimResults=true;rec.maxAlternatives=1;
+  let final="";
+  rec.onstart=()=>{isLis=true;final="";setAnaState("listening");};
+  rec.onresult=e=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join("");
+    if(e.results[e.results.length-1].isFinal){final=t;}
+    // Show interim in input
+    document.getElementById("chat-inp").value=t;
+  };
+  rec.onerror=()=>{isLis=false;setAnaState("idle");};
+  rec.onend=()=>{
+    isLis=false;
+    const txt=final||document.getElementById("chat-inp").value;
+    document.getElementById("chat-inp").value="";
+    if(txt.trim().length>1){
+      setAnaState("thinking");
+      setTimeout(()=>handleInput(txt.trim()),300);
+    }else{setAnaState("idle");}
+  };
+  rec.start();
+}
+
+// ═══════════════════════════════════════════════
+// AI BRAIN – OFFLINE RULES ENGINE
+// ═══════════════════════════════════════════════
+function handleInput(txt){
+  if(!txt||!txt.trim())return;
+  const t=txt.trim();
+
+  // Add user message
+  D.chat.push({r:"u",t});
+  renderChat();
+  setAnaState("thinking");
+
+  // Process with slight delay for natural feel
+  setTimeout(()=>{
+    const resp=processInput(t);
+    D.chat.push({r:"a",t:resp});
+    renderAll();save();
+    anaSpeak(resp);
+  },400);
+}
+
+function processInput(txt){
+  const t=txt.toLowerCase().trim();
+  const name=D.uname||"Sasa";
+  const now=new Date();
+  const h=now.getHours(),min=now.getMinutes();
+  const timeStr=`${String(h).padStart(2,"0")}:${String(min).padStart(2,"0")}`;
+  const days=["nedelja","ponedeljak","utorak","sreda","četvrtak","petak","subota"];
+  const months=["januar","februar","mart","april","maj","jun","jul","avgust","septembar","oktobar","novembar","decembar"];
+  const dayName=days[now.getDay()];
+  const dateStr=`${now.getDate()}. ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+  // ── POZDRAV ──────────────────────────────────
+  if(/^(zdravo|hej|ej|hi|cao|ciao|dobro jutro|dobro vece|dobar dan|bok)/.test(t)){
+    const greeting=h<12?"Dobro jutro":h<18?"Dobar dan":"Dobro veče";
+    const opts=[
+      `${greeting}, ${name}! Kako mogu da vam pomognem danas?`,
+      `${greeting}, ${name}! Ovde Ana, uvek na usluzi. Šta vam treba?`,
+      `${greeting}! Kako ste danas, ${name}? Čime mogu da pomognem?`,
+    ];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+
+  // ── VREME ────────────────────────────────────
+  if(/koliko je sati|koje je vreme|vreme je|sati|sat/.test(t)){
+    return `Sada je ${timeStr}, ${name}. ${h<12?"Još jutro!":h<14?"Podne je!":h<18?"Popodne je.":"Veče je."}`;
+  }
+
+  // ── DATUM ────────────────────────────────────
+  if(/koji je datum|koji dan|datum|dan u nedelji/.test(t)){
+    return `Danas je ${dayName}, ${dateStr}.`;
+  }
+
+  // ── STA IMAM DANAS ───────────────────────────
+  if(/sta imam danas|šta imam|plan za danas|moj raspored|raspored|pregled dana/.test(t)){
+    const todayAlarms=D.alarms.filter(a=>a.active).map(a=>`alarm ${a.label} u ${a.time}`);
+    const todayEvents=D.events.map(e=>`${e.title} u ${e.time}`);
+    const activeTodos=D.todos.filter(t=>!t.done).map(t=>t.text);
+    let resp=`Evo vašeg plana za danas, ${name}:\n\n`;
+    if(todayAlarms.length) resp+=`Alarmi: ${todayAlarms.join(", ")}.\n`;
+    if(todayEvents.length) resp+=`Termini: ${todayEvents.join(", ")}.\n`;
+    if(activeTodos.length) resp+=`Zadaci: ${activeTodos.slice(0,3).join(", ")}${activeTodos.length>3?` i još ${activeTodos.length-3}`:""}.`;
+    if(!todayAlarms.length&&!todayEvents.length&&!activeTodos.length) resp="Danas nemate ništa zakazano. Slobodan dan!";
+    return resp;
+  }
+
+  // ── DODAJ ALARM ──────────────────────────────
+  const alarmMatch=t.match(/(?:dodaj|postavi|namesti|stavi)\s+(?:alarm|podsetnik|okidač)(?:\s+(?:za|u|na))?\s+(\d{1,2})(?::(\d{2}))?(?:\s*(ujutro|uveče|popodne|sati|sat|minuta|h))?/i);
+  const alarmRelMatch=t.match(/(?:alarm|podsetnik)\s+za\s+(\d+)\s+(?:minut|min)/i);
+  const alarmTimeMatch=t.match(/(?:za|u|na)\s+(\d{1,2}):(\d{2})/);
+
+  if(alarmMatch||alarmRelMatch||alarmTimeMatch){
+    let ah,am=0,label="Podsetnik";
+    if(alarmRelMatch){
+      const mins=parseInt(alarmRelMatch[1]);
+      const t2=new Date(now.getTime()+mins*60000);
+      ah=t2.getHours();am=t2.getMinutes();
+      label=`Podsetnik za ${mins} minuta`;
+    }else if(alarmMatch){
+      ah=parseInt(alarmMatch[1]);
+      am=alarmMatch[2]?parseInt(alarmMatch[2]):0;
+      if(alarmMatch[3]&&/uvece|popodne/i.test(alarmMatch[3])&&ah<12)ah+=12;
+    }else if(alarmTimeMatch){
+      ah=parseInt(alarmTimeMatch[1]);
+      am=parseInt(alarmTimeMatch[2]);
+    }
+    if(ah!==undefined){
+      const timeF=`${String(ah).padStart(2,"0")}:${String(am).padStart(2,"0")}`;
+      // Extract label from text
+      const labelMatch=t.match(/(?:alarm|podsetnik)\s+(.+?)(?:\s+za|\s+u|\s+na|\s+\d)/i);
+      if(labelMatch&&labelMatch[1].trim().length>1)label=labelMatch[1].trim();
+      D.alarms.push({id:Date.now(),label,time:timeF,active:true,fired:false,rep:"none"});
+      save();renderAll();
+      return `Odlično, ${name}! Alarm "${label}" sam postavila za ${timeF}. Podsetiću vas na vreme!`;
+    }
+  }
+
+  // ── BRISI ALARM ──────────────────────────────
+  if(/obrisi|ukloni|izbriši|cancel|ukini/.test(t)&&/alarm|podsetnik/.test(t)){
+    const match=t.match(/(?:obrisi|ukloni|izbriši)\s+alarm\s+(.+)/i);
+    if(match){
+      const name2=match[1].trim();
+      const found=D.alarms.find(a=>a.label.toLowerCase().includes(name2));
+      if(found){D.alarms=D.alarms.filter(a=>a.id!==found.id);save();renderAll();return `Alarm "${found.label}" je obrisan, ${name}.`;}
+    }
+    if(D.alarms.length===0)return `Nemate aktivnih alarma, ${name}.`;
+    return `Koji alarm da obrišem? Imate: ${D.alarms.map(a=>a.label).join(", ")}.`;
+  }
+
+  // ── ALARMI PREGLED ───────────────────────────
+  if(/alarmi|alarm|podsetnici|koji alarmi/.test(t)&&!/dodaj|postavi|stavi|obrisi/.test(t)){
+    if(D.alarms.length===0)return `Nemate nijednog alarma, ${name}. Da podesim jedan?`;
+    const aktiv=D.alarms.filter(a=>a.active);
+    return `Vaši alarmi su, ${name}: ${aktiv.map(a=>`${a.label} u ${a.time}`).join(", ")}.${D.alarms.length>aktiv.length?" Neki su isključeni.":""}`;
+  }
+
+  // ── DODAJ BELEŠKU ────────────────────────────
+  const noteMatch=t.match(/(?:dodaj|napravi|zapisi|sacuvaj|sačuvaj)\s+(?:belešku?|belesku|zapis|napomenu?)(?:\s+(?:pod\s+nazivom|nazvan[ao]?|pod\s+imenom))?\s*(.+)?/i);
+  if(noteMatch){
+    const title=noteMatch[1]?noteMatch[1].trim():"Nova beleška";
+    D.notes.push({id:Date.now(),title,items:[]});
+    save();renderAll();
+    return `Beleška "${title}" je sačuvana, ${name}! Možete joj dodati stavke u tabu Beleske.`;
+  }
+
+  // ── BELESKE PREGLED ──────────────────────────
+  if(/beleške?|beleska|zapis|belesku|moje beleske/.test(t)&&!/dodaj|napravi/.test(t)){
+    if(D.notes.length===0)return `Nemate nijedne beleške, ${name}. Da napravim jednu?`;
+    return `Imate ${D.notes.length} beleški: ${D.notes.map(n=>n.title).join(", ")}.`;
+  }
+
+  // ── DODAJ TERMIN ─────────────────────────────
+  const eventMatch=t.match(/(?:dodaj|zakaži|zakazi|stavi|napravi)\s+(?:termin|sastanak|meeting|obavezu?)\s+(.+?)(?:\s+(?:za|u|na)\s+(\d{1,2})(?::(\d{2}))?)?$/i);
+  if(eventMatch){
+    const title=eventMatch[1]||"Termin";
+    let eh=12,em=0;
+    if(eventMatch[2]){eh=parseInt(eventMatch[2]);em=eventMatch[3]?parseInt(eventMatch[3]):0;}
+    const timeF=`${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`;
+    D.events.push({id:Date.now(),title,time:timeF,date:"",color:EVCOL[Math.floor(Math.random()*EVCOL.length)],loc:""});
+    save();renderAll();
+    return `Termin "${title}" sam zakazala za ${timeF}, ${name}. Podsetiću vas!`;
+  }
+
+  // ── TERMINI PREGLED ──────────────────────────
+  if(/termini|termin|sastanci|raspored|kalendar|moji termini/.test(t)&&!/dodaj|zakazi/.test(t)){
+    if(D.events.length===0)return `Nemate zakazanih termina, ${name}.`;
+    return `Vaši termini su: ${D.events.map(e=>`${e.title} u ${e.time}`).join(", ")}.`;
+  }
+
+  // ── DODAJ ZADATAK ────────────────────────────
+  const todoMatch=t.match(/(?:dodaj|napravi|stavi|zapisi)\s+(?:zadatak|obavezu?|to-do|todo)\s+(.+)/i);
+  if(todoMatch){
+    const text=todoMatch[1].trim();
+    D.todos.push({id:Date.now(),text,done:false});
+    save();renderTodos();
+    return `Zadatak "${text}" je dodat na listu, ${name}!`;
+  }
+
+  // ── TODOS PREGLED ────────────────────────────
+  if(/zadaci|zadatak|obaveze|to-do|lista|šta treba|sta treba/.test(t)&&!/dodaj/.test(t)){
+    const active=D.todos.filter(t=>!t.done);
+    const done=D.todos.filter(t=>t.done);
+    if(D.todos.length===0)return `Lista zadataka je prazna, ${name}. Uživajte u slobodnom vremenu!`;
+    let resp=`Imate ${active.length} aktivnih zadataka, ${name}: ${active.slice(0,4).map(t=>t.text).join(", ")}`;
+    if(done.length>0)resp+=`. Završili ste ${done.length} zadataka. Bravo!`;
+    return resp;
+  }
+
+  // ── HVALA ────────────────────────────────────
+  if(/hvala|thanks|thank you|super|odlično|sjajno|bravo|ok|važi/.test(t)){
+    const opts=[
+      `Nema na čemu, ${name}! Tu sam za sve što vam treba.`,
+      `Uvek mi je drago da pomognem, ${name}!`,
+      `Molim! Ako vam šta treba, samo recite.`,
+    ];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+
+  // ── KAKO SI ──────────────────────────────────
+  if(/kako si|kako ste|jesi li dobro|kako ide/.test(t)){
+    return `Odlična sam, hvala što pitaste, ${name}! Uvek sam tu i uvek u dobroj formi. A vi kako ste?`;
+  }
+
+  // ── KO SI TI ─────────────────────────────────
+  if(/ko si|ko ste|predstavi se|kako se zoves|opis/.test(t)){
+    return `Ja sam Ana, vaša personalna AI sekretarica! Mogu da vodim vaše alarme, beleške, termine i zadatke. Radim potpuno offline, bez interneta. Uvek dostupna za ${name}!`;
+  }
+
+  // ── ŠTA UMEŠ ─────────────────────────────────
+  if(/šta umeš|sta umes|pomozi mi|komande|funkcije|sta znas|šta znaš|sta mozes|šta možeš/.test(t)){
+    return `Mogu da vam pomognem sa svim ovim, ${name}: postaviti alarm ili podsetnik, sačuvati belešku, zakazati termin, dodati zadatak na listu, reći vam koje je vreme ili datum, pregledati vaš plan za dan, i još mnogo toga! Samo recite šta vam treba.`;
+  }
+
+  // ── VREME/TEMPERATURA ────────────────────────
+  if(/kakvo je vreme|temperatura|prognoza|kisa|sunce|oblacno/.test(t)){
+    return `Za informacije o vremenu potreban mi je internet, ${name}. Radim u offline modu. Preporučujem da pogledate vremensku prognozu u browseru.`;
+  }
+
+  // ── ŠALA / VIC ───────────────────────────────
+  if(/ispricaj vic|šala|issmej me|šaljivo|reci nesto smesno/.test(t)){
+    const vics=[
+      "Zašto kompjuteri ne mogu da pevaju? Jer uvek zaštekaju na visokim notama!",
+      "Pitao čovek robota: Jesi li srećan? Robot odgovorio: Da, 1!",
+      "Programer ide u prodavnicu. Žena mu kaže: Uzmi litar mleka, a ako ima jaja - uzmi desetak. Vratio se sa deset litara mleka jer je bilo jaja.",
+    ];
+    return vics[Math.floor(Math.random()*vics.length)];
+  }
+
+  // ── BRISANJE SVEGA ───────────────────────────
+  if(/obrisi sve|pocetak|reset|pocni ispocetka/.test(t)){
+    return `Da li ste sigurni da želite da obrišete sve podatke, ${name}? Ako da, idite u Podešavanja i potvrdite brisanje.`;
+  }
+
+  // ── ZBOGOM ───────────────────────────────────
+  if(/dovidjenja|cao|zbogom|pa vidimo se|laku noc|laku noć|cujemo se/.test(t)){
+    return `${h>=20?"Laku noć":"Do viđenja"}, ${name}! Lepo se odmorite. Kada zatrebam, tu sam!`;
+  }
+
+  // ── FALLBACK – PRIRODNI ODGOVORI ─────────────
+  const fallbacks=[
+    `Razumem, ${name}. Mogu da vam pomognem sa alarmima, beleškama, terminima i zadacima. Šta od toga vam treba?`,
+    `Hmm, nisam sasvim sigurna šta mislite, ${name}. Možete reći "dodaj alarm", "nova beleška", "zakaži termin" ili "dodaj zadatak".`,
+    `Izvините, ${name}, to ne razumem dobro. Ali tu sam! Recite mi konkretno šta trebate.`,
+    `Zanima me šta ste rekli, ${name}, ali nisam razumela. Možete li drugačije da formulišete?`,
+  ];
+  D.mem.lastTopic=txt;
+  return fallbacks[Math.floor(Math.random()*fallbacks.length)];
+}
+
+// ═══════════════════════════════════════════════
+// OFFLINE + INIT
+// ═══════════════════════════════════════════════
+window.addEventListener("online",()=>document.getElementById("offbadge").style.display="none");
+window.addEventListener("offline",()=>document.getElementById("offbadge").style.display="block");
+if(!navigator.onLine)document.getElementById("offbadge").style.display="block";
+
+function init(){
+  setTheme(D.theme||"light");
+  document.documentElement.style.setProperty("--ac",D.ac||"#00c8b4");
+  document.getElementById("uname-lbl").textContent=D.uname||"Sasa";
+  if(document.getElementById("name-inp"))document.getElementById("name-inp").value=D.uname||"";
+  renderAll();swTab("chat");
+}
+init();
+</script>
+</body>
+</html>
