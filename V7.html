@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moj Budžet</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #e0e5ec;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: #2c2f33;
+      color: #eee;
+    }
+    .container {
+      background: #e0e5ec;
+      box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+      border-radius: 30px;
+      padding: 40px;
+      width: 420px;
+      text-align: center;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    body.dark .container {
+      background: #2c2f33;
+      box-shadow: 9px 9px 16px #1c1e20, -9px -9px 16px #3c3f44;
+    }
+    h1 { margin-bottom: 20px; }
+    .circle {
+      width: 150px; height: 150px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #6a85b6, #bac8e0);
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 22px; font-weight: bold;
+      box-shadow: inset 6px 6px 12px #a3b1c6, inset -6px -6px 12px #ffffff;
+    }
+    body.dark .circle {
+      background: radial-gradient(circle at 30% 30%, #444, #666);
+      box-shadow: inset 6px 6px 12px #1c1e20, inset -6px -6px 12px #3c3f44;
+    }
+    .info { display: flex; justify-content: space-around; margin-top: 20px; }
+    .info div {
+      background: #e0e5ec;
+      box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+      border-radius: 15px; padding: 15px; width: 100px; font-weight: bold;
+    }
+    body.dark .info div {
+      background: #2c2f33;
+      box-shadow: 5px 5px 10px #1c1e20, -5px -5px 10px #3c3f44;
+      color: #eee;
+    }
+    button {
+      margin-top: 25px; padding: 12px 25px; border: none; border-radius: 15px;
+      background: #e0e5ec; box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+      cursor: pointer; font-weight: bold; transition: 0.3s;
+    }
+    button:hover { box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff; }
+    body.dark button {
+      background: #2c2f33; box-shadow: 5px 5px 10px #1c1e20, -5px -5px 10px #3c3f44; color: #eee;
+    }
+    canvas { margin-top: 20px; }
+    #copyBox {
+      position: fixed; bottom: 20px; right: 20px;
+      background: #e0e5ec;
+      box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+      border-radius: 50%; width: 60px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 24px;
+    }
+    body.dark #copyBox {
+      background: #2c2f33; box-shadow: 5px 5px 10px #1c1e20, -5px -5px 10px #3c3f44; color: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Prva strana -->
+  <div class="container" id="prvaStrana">
+    <h1>Moj Budžet</h1>
+    <div class="circle" id="circle">0%<br>Potrošeno</div>
+    <div id="balans">Trenutni balans: 0 RSD</div>
+    <div class="info">
+      <div id="prihodi">Prihodi<br>0</div>
+      <div id="rashodi">Rashodi<br>0</div>
+      <div id="ustede">Uštede<br>0</div>
+    </div>
+    <button onclick="dodajPrihod()">+ Prihod</button>
+    <button onclick="dodajTrosak()">+ Trošak</button>
+    <button onclick="prikaziDrugu()">Dnevni troškovi</button>
+    <button onclick="toggleDark()">Dark Mode</button>
+  </div>
+
+  <!-- Druga strana -->
+  <div class="container" id="drugaStrana" style="display:none;">
+    <h1>Dnevni troškovi</h1>
+    <div class="info">
+      <div>Hrana<br>3200</div>
+      <div>Prevoz<br>1500</div>
+      <div>Zabava<br>800</div>
+      <div>Računi<br>4200</div>
+    </div>
+    <canvas id="grafikon" width="350" height="200"></canvas>
+    <button onclick="prikaziPrvu()">Nazad</button>
+    <button onclick="toggleDark()">Dark Mode</button>
+  </div>
+
+  <!-- Copy kocka -->
+  <div id="copyBox" onclick="copyCode()">📋</div>
+
+  <script>
+    let prihodi = parseInt(localStorage.getItem("prihodi")) || 0;
+    let rashodi = parseInt(localStorage.getItem("rashodi")) || 0;
+
+    function osveziPrikaz() {
+      let ustede = prihodi - rashodi;
+      let procenat = (prihodi > 0) ? Math.round((rashodi / prihodi) * 100) : 0;
+      document.getElementById("prihodi").innerHTML = "Prihodi<br>" + prihodi;
+      document.getElementById("rashodi").innerHTML = "Rashodi<br>" + rashodi;
+      document.getElementById("ustede").innerHTML = "Uštede<br>" + ustede;
+      document.getElementById("balans").innerText = "Trenutni balans: " + ustede + " RSD";
+      document.getElementById("circle").innerHTML = procenat + "%<br>Potrošeno";
+    }
+
+    function dodajPrihod() {
+      let iznos = prompt("Unesi prihod (RSD):");
+      if (iznos && !isNaN(iznos)) {
+        prihodi += parseInt(iznos);
+        localStorage.setItem("prihodi", prihodi);
+        osveziPrikaz();
+      }
+    }
+
+    function dodajTrosak() {
+      let iznos = prompt("Unesi trošak (RSD):");
+      if (iznos && !isNaN(iznos)) {
+        rashodi += parseInt(iznos);
+        localStorage.setItem("rashodi", rashodi);
+        osveziPrikaz();
+      }
+    }
+
+    function prikaziDrugu() {
+      document.getElementById("prvaStrana").style.display = "none";
+      document.getElementById("drugaStrana").style.display = "block";
+      nacrtajGrafikon();
+    }
+
+    function prikaziPrvu() {
+      document.getElementById("drugaStrana").style.display = "
